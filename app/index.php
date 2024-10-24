@@ -30,6 +30,9 @@ $dotenv->safeLoad();
 // Instantiate App
 $app = AppFactory::create();
 
+// Set base path
+$app->setBasePath('/app');
+
 // Add error middleware
 $app->addErrorMiddleware(true, true, true);
 
@@ -49,5 +52,11 @@ $app->get('[/]', function (Request $request, Response $response) {
     $response->getBody()->write($payload);
     return $response->withHeader('Content-Type', 'application/json');
 });
+
+$app->get('/', function (Request $request, Response $response, $args) {
+  $response->getBody()->write("¡Bienvenido a la API!");
+  return $response;
+});
+
 
 $app->run();
