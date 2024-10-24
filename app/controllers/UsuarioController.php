@@ -1,4 +1,20 @@
 <?php
+/*
+ Este archivo define un controlador que extiende la clase Usuario y 
+ utiliza la interfaz IApiUsable. Aquí se implementan los métodos de 
+ la API para interactuar con usuarios:
+
+ CargarUno: Recibe los datos de un usuario (usuario y clave) desde 
+ la solicitud HTTP y crea un nuevo registro en la base de datos.
+
+ TraerUno: Busca un usuario por su nombre y lo devuelve.
+
+ TraerTodos: Recupera todos los usuarios de la base de datos.
+
+ ModificarUno: Modifica la información de un usuario.
+ 
+ BorrarUno: Borra (o desactiva) un usuario.
+*/
 require_once './models/Usuario.php';
 require_once './interfaces/IApiUsable.php';
 

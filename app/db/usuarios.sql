@@ -1,3 +1,7 @@
+/*
+ Es un script SQL que probablemente contiene las instrucciones 
+ para crear la tabla usuarios en la base de datos.
+*/
 -- phpMyAdmin SQL Dump
 -- version 4.8.5
 -- https://www.phpmyadmin.net/
@@ -7,11 +11,10 @@
 -- Versión del servidor: 8.0.13-4
 -- Versión de PHP: 7.2.24-0ubuntu0.18.04.7
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 SET AUTOCOMMIT = 0;
 START TRANSACTION;
-SET time_zone = "+00:00";
-
+SET time_zone = '+00:00';
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -49,7 +52,7 @@ INSERT INTO `usuarios` (`id`, `usuario`, `clave`, `fechaBaja`) VALUES
 --
 
 --
--- Indices de la tabla `usuarios`
+-- Índices de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id`);

@@ -1,4 +1,10 @@
 <?php
+/*
+ Esta clase sigue el patrón Singleton para manejar las conexiones a 
+ la base de datos usando PDO. Define métodos como obtenerInstancia, 
+ prepararConsulta y obtenerUltimoId para interactuar con la base de 
+ datos de manera segura y eficiente.
+*/
 class AccesoDatos
 {
     private static $objAccesoDatos;

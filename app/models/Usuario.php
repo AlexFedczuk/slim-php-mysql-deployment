@@ -1,4 +1,10 @@
 <?php
+/*
+ Este archivo contiene la definición del modelo Usuario. 
+ Incluye métodos como crearUsuario, obtenerTodos, obtenerUsuario, 
+ modificarUsuario y borrarUsuario, que permiten interactuar 
+ con la tabla usuarios en la base de datos.
+*/
 
 class Usuario
 {

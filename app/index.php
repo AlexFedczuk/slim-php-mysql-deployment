@@ -1,4 +1,10 @@
 <?php
+/*
+ Este archivo inicializa el entorno de Slim, 
+ carga las dependencias y define las rutas de 
+ la API que se mapearán a los métodos del 
+ controlador UsuarioController.
+*/
 // Error Handling
 error_reporting(-1);
 ini_set('display_errors', 1);
