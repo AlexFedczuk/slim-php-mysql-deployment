@@ -44,19 +44,18 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('[/]', \UsuarioController::class . ':TraerTodos');
     $group->get('/{usuario}', \UsuarioController::class . ':TraerUno');
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
-  });
+});
 
 $app->get('[/]', function (Request $request, Response $response) {    
     $payload = json_encode(array("mensaje" => "Slim Framework 4 PHP"));
     
     $response->getBody()->write($payload);
     return $response->withHeader('Content-Type', 'application/json');
-});
+}); // http://localhost:666/app , así funciona.
 
-$app->get('/', function (Request $request, Response $response, $args) {
+$app->get('/bienvenida', function (Request $request, Response $response, $args) {
   $response->getBody()->write("¡Bienvenido a la API!");
   return $response;
-});
-
+}); // No funciona, porque está su ruta duplicada con la anterior 
 
 $app->run();
