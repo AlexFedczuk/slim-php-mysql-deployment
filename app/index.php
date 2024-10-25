@@ -22,6 +22,8 @@ require_once './db/AccesoDatos.php';
 // require_once './middlewares/Logger.php';
 
 require_once './controllers/UsuarioController.php';
+require_once './controllers/EmpleadoController.php';
+require_once './controllers/MesaController.php';
 
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -56,6 +58,20 @@ $app->get('[/]', function (Request $request, Response $response) {
 $app->get('/bienvenida', function (Request $request, Response $response, $args) {
   $response->getBody()->write("¡Bienvenido a la API!");
   return $response;
-}); // No funciona, porque está su ruta duplicada con la anterior 
+}); // No funciona, porque está su ruta duplicada con la anterior
+
+// Las acciones de Empleado: Alta, Listar y Modificar.
+$app->group('/empleados', function (RouteCollectorProxy $group) {
+  $group->post('[/]', \EmpleadoController::class . ':CrearEmpleado');
+  $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados');
+  $group->post('/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado');
+});
+
+// Las acciones de Mesa: Alta, Listar y Modificar.
+$app->group('/mesas', function (RouteCollectorProxy $group) {
+  $group->post('[/]', \MesaController::class . ':CrearMesa');
+  $group->get('[/]', \MesaController::class . ':ListarMesas');
+  $group->post('/estado/{id}', \MesaController::class . ':CambiarEstadoMesa');
+});
 
 $app->run();

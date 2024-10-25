@@ -1,0 +1,8 @@
+{
+    "estados": [
+        "con cliente esperando pedido",
+        "con cliente comiendo",
+        "con cliente pagando",
+        "cerrada"
+    ]
+}

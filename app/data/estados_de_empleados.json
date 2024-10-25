@@ -1,0 +1,7 @@
+{
+    "estados": [
+        "activo",
+        "suspendido",
+        "borrado"
+    ]
+}
