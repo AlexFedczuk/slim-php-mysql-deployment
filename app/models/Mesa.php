@@ -42,4 +42,20 @@ class Mesa
         $consulta->execute();
         return $consulta->fetchObject('Mesa');
     }
+
+    // Método para validar si el mozo existe y tiene el rol adecuado
+    public static function validarMesa($mesa_id)
+    {
+        $mesa = Mesa::obtenerPorId($mesa_id);
+        if (!$mesa) {
+            return "ERROR: La mesa no existe.";
+        }
+        /*if ($mesa->rol !== 'mozo') {
+            return "ERROR: El empleado relacionado no tiene el rol de mozo.";
+        }
+        if ($mesa->estado == 'suspendido') {
+            return "ERROR: El empleado relacionado está suspendido.";
+        }*/
+        return null;  // Sin errores
+    }
 }

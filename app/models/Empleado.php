@@ -45,4 +45,20 @@ class Empleado
         $consulta->execute();
         return $consulta->fetchObject('Empleado');
     }
+
+    // Método para validar si el mozo existe y tiene el rol adecuado
+    public static function validarMozoResponsable($mozo_responsable_id)
+    {
+        $mozo_responsable = Empleado::obtenerPorId($mozo_responsable_id);
+        if (!$mozo_responsable) {
+            return "ERROR: El mozo responsable no existe.";
+        }
+        if ($mozo_responsable->rol !== 'mozo') {
+            return "ERROR: El empleado relacionado no tiene el rol de mozo.";
+        }
+        if ($mozo_responsable->estado == 'suspendido') {
+            return "ERROR: El empleado relacionado está suspendido.";
+        }
+        return null;  // Sin errores
+    }
 }

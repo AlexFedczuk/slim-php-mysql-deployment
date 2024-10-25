@@ -10,7 +10,7 @@ class MesaController
         $params = $request->getParsedBody();
 
         // Validar el mozo responsable
-        $error_mozo = self::validarMozoResponsable($params['mozo_responsable']);
+        $error_mozo = Empleado::validarMozoResponsable($params['mozo_responsable']);
         if ($error_mozo) {
             $payload = json_encode(array("mensaje" => $error_mozo));
             $response->getBody()->write($payload);
@@ -85,22 +85,6 @@ class MesaController
         }
 
         return $estados_permitidos;
-    }
-
-    // Método para validar si el mozo existe y tiene el rol adecuado
-    private static function validarMozoResponsable($mozo_responsable_id)
-    {
-        $mozo_responsable = Empleado::obtenerPorId($mozo_responsable_id);
-        if (!$mozo_responsable) {
-            return "ERROR: El mozo responsable no existe.";
-        }
-        if ($mozo_responsable->rol !== 'mozo') {
-            return "ERROR: El empleado relacionado no tiene el rol de mozo.";
-        }
-        if ($mozo_responsable->estado == 'suspendido') {
-            return "ERROR: El empleado relacionado está suspendido.";
-        }
-        return null;  // Sin errores
     }
 
     // Método para generar automáticamente un ID alfanumérico de 5 caracteres
