@@ -9,6 +9,13 @@ class MesaController
     {
         $params = $request->getParsedBody();
 
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (!isset($params['mozo_responsable'])) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id del mozo responsable)"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
         // Validar el mozo responsable
         $error_mozo = Empleado::validarMozoResponsable($params['mozo_responsable']);
         if ($error_mozo) {

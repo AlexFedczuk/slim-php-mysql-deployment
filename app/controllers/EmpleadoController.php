@@ -1,5 +1,6 @@
 <?php
 require_once './models/Empleado.php';
+require_once './interfaces/IApiUsable.php';
 
 class EmpleadoController
 {
@@ -8,29 +9,29 @@ class EmpleadoController
     {
         $params = $request->getParsedBody();
 
-        // Formatear el nombre
-        $nombre = self::formatearNombre($params['nombre']);
-
-        // Obtener los roles permitidos (cargados solo una vez)
-        $roles = self::obtenerRolesPermitidos();
-
-        // Validar el rol
-        $rol = strtolower($params['rol']);
-        if (!in_array($rol, $roles)) {
-            $payload = json_encode(array("mensaje" => "ERROR: El rol ingresado no es valido."));
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (empty($params['nombre']) || empty($params['clave']) || empty($params['rol'])) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (nombre, clave o rol)"]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
-        // Crear el empleado si las validaciones pasan
+        // Validar el rol
+        if (!Empleado::esRolValido($params['rol'])) {
+            $payload = json_encode(["mensaje" => "ERROR: El rol ingresado no es válido"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Crear el empleado
         $empleado = new Empleado();
-        $empleado->nombre = $nombre;
-        $empleado->rol = $rol;
-        $empleado->estado = 'activo'; // Por defecto, estado 'activo'
+        $empleado->nombre = ucwords(strtolower($params['nombre']));
+        $empleado->clave = $params['clave'];
+        $empleado->rol = strtolower($params['rol']);
+        
+        $empleado->guardar(); // Mueve la lógica de guardado al modelo
 
-        $empleado->crearEmpleado();
-
-        $payload = json_encode(array("mensaje" => "SUCCESS: Empleado creado con exito!"));
+        $payload = json_encode(["mensaje" => "SUCCESS: Empleado creado con éxito"]);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -38,8 +39,8 @@ class EmpleadoController
     // Listar todos los empleados
     public function ListarEmpleados($request, $response, $args)
     {
-        $lista = Empleado::obtenerTodos();
-        $payload = json_encode(array("listaEmpleados" => $lista));
+        $empleados = Empleado::obtenerTodos();
+        $payload = json_encode(["empleados" => $empleados]);
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -48,70 +49,36 @@ class EmpleadoController
     // Cambiar el estado de un empleado
     public function CambiarEstadoEmpleado($request, $response, $args)
     {
+        $id = $args['id'];
         $params = $request->getParsedBody();
 
-        // Verificar que el empleado exista
-        $empleado = Empleado::obtenerPorId($args['id']);
-        if (!$empleado) {
-            $payload = json_encode(array("mensaje" => "ERROR: El ID ingresado no coincide con ningun empleado."));
+        // Verificar que el estado esté presente y no sea nulo
+        if (empty($params['estado'])) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (estado)"]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Verificar si el empleado existe
+        $empleado = Empleado::obtenerPorId($id);
+        if (!$empleado) {
+            $payload = json_encode(["mensaje" => "ERROR: El ID ingresado no coincide con ningún empleado"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
 
         // Validar el estado
-        $estado = strtolower($params['estado']);
-        if (!self::validarEstado($estado)) {
-            $payload = json_encode(array("mensaje" => "ERROR: El estado ingresado no es valido."));
+        if (!Empleado::esEstadoValido($params['estado'])) {
+            $payload = json_encode(["mensaje" => "ERROR: El estado ingresado no es válido"]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
-        // Cambiar el estado del empleado
-        Empleado::cambiarEstado($args['id'], $estado);
+        // Cambiar el estado
+        $empleado->cambiarEstado($params['estado']);
 
-        $payload = json_encode(array("mensaje" => "SUCCESS: Estado del empleado actualizado con exito!"));
+        $payload = json_encode(["mensaje" => "SUCCESS: Estado del empleado actualizado con éxito"]);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    // Método para cargar los roles solo una vez
-    private static function obtenerRolesPermitidos()
-    {
-        static $roles_permitidos = null;
-        
-        if ($roles_permitidos === null) {
-            $json_data = file_get_contents('./data/roles.json');
-            $roles_data = json_decode($json_data, true);
-            $roles_permitidos = array_map('strtolower', $roles_data['roles']);
-        }
-
-        return $roles_permitidos;
-    }
-
-    // Método para cargar los estados permitidos desde JSON solo una vez
-    private static function obtenerEstadosPermitidos()
-    {
-        static $estados_permitidos = null;
-        
-        if ($estados_permitidos === null) {
-            $json_data = file_get_contents('./data/estados_de_empleados.json');
-            $estados_data = json_decode($json_data, true);
-            $estados_permitidos = array_map('strtolower', $estados_data['estados']);
-        }
-
-        return $estados_permitidos;
-    }
-
-    // Método para formatear el nombre
-    private static function formatearNombre($nombre)
-    {
-        return ucwords(strtolower($nombre));
-    }
-
-    // Método para validar si el estado es permitido
-    private static function validarEstado($estado)
-    {
-        $estados_permitidos = self::obtenerEstadosPermitidos();
-        return in_array(strtolower($estado), $estados_permitidos);
     }
 }
