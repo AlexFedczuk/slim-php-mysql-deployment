@@ -68,4 +68,13 @@ class Pedido {
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
     }
+
+    // Cambiar el estado de un pedido en la base de datos
+    public static function cambiarEstado($pedido_id, $nuevo_estado) {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos SET estado = :estado WHERE id = :id");
+        $consulta->bindValue(':estado', $nuevo_estado, PDO::PARAM_STR);
+        $consulta->bindValue(':id', $pedido_id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
 }

@@ -10,145 +10,123 @@ class PedidoController
         $params = $request->getParsedBody();
 
         // Verificar que la mesa exista
-        $mesa = Mesa::obtenerPorId($params['mesa_id']);
-        if (!$mesa) {
-            $payload = json_encode(array("mensaje" => "ERROR: La mesa no existe."));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        if (!$this->verificarMesaExiste($params['mesa_id'], $response)) {
+            return $response;
         }
 
         // Validar el mozo responsable
         $error_mozo = Empleado::validarMozoResponsable($params['mozo_responsable']);
         if ($error_mozo) {
-            $payload = json_encode(array("mensaje" => $error_mozo));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }        
+            return $this->responderConJson($response, ["mensaje" => $error_mozo], 400);
+        }
 
         // Crear el pedido
         $pedido = new Pedido();
         $pedido->mesa_id = $params['mesa_id'];
-        $pedido->cliente_nombre =  ucwords(strtolower($params['cliente_nombre'])); // Formatear nombre del cliente
+        $pedido->cliente_nombre = ucwords(strtolower($params['cliente_nombre'])); // Formatear nombre del cliente
         $pedido->productos = is_array($params['productos']) ? json_encode($params['productos']) : $params['productos'];
         $pedido->mozo_responsable = $params['mozo_responsable'];
         $pedido->estado = 'pendiente';  // Estado inicial
-
-        // Guardar el pedido en la base de datos
         $pedido->crearPedido();
 
-        $payload = json_encode(array("mensaje" => "SUCCESS: Pedido creado con exito!"));
-        $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+        return $this->responderConJson($response, ["mensaje" => "SUCCESS: Pedido creado con exito!"]);
     }
 
     // Obtener un pedido específico por ID
     public function ObtenerPedido($request, $response, $args)
     {
-        $pedido_id = $args['id'];  // ID del pedido
-
-        // Buscar el pedido en la base de datos
+        $pedido_id = $args['id'];
         $pedido = Pedido::obtenerPorId($pedido_id);
         
         if ($pedido) {
-            $payload = json_encode(array("pedido" => $pedido));
+            return $this->responderConJson($response, ["pedido" => $pedido]);
         } else {
-            // Si el pedido no existe, devolver un mensaje de error
-            $payload = json_encode(array("mensaje" => "ERROR: El pedido no existe."));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+            return $this->responderConJson($response, ["mensaje" => "ERROR: El pedido no existe."], 404);
         }
-
-        $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
     }
 
+    // Cambiar el estado de un pedido
     public function CambiarEstadoPedido($request, $response, $args)
     {
-        $pedido_id = $args['id'];  // ID del pedido
-        $params = $request->getParsedBody();  // Obtener el nuevo estado desde el cuerpo de la solicitud
-        $nuevo_estado = strtolower($params['estado']);  // Convertir el estado a minúsculas para evitar inconsistencias
+        $pedido_id = $args['id'];
+        $params = $request->getParsedBody();
+        $nuevo_estado = strtolower($params['estado']);
 
         // Verificar si el pedido existe
-        $pedido = Pedido::obtenerPorId($pedido_id);
-        if (!$pedido) {
-            $payload = json_encode(array("mensaje" => "ERROR: El pedido no existe."));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        if (!$this->verificarPedidoExiste($pedido_id, $response)) {
+            return $response;
         }
-
-        // Definir los estados permitidos
-        $estados_permitidos = self::obtenerEstadosPermitidos();
 
         // Validar el nuevo estado
-        if (!in_array($nuevo_estado, $estados_permitidos)) {
-            $payload = json_encode(array("mensaje" => "ERROR: El estado ingresado no es valido."));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        if (!in_array($nuevo_estado, self::obtenerEstadosPermitidos())) {
+            return $this->responderConJson($response, ["mensaje" => "ERROR: El estado ingresado no es valido."], 400);
         }
 
-        // Cambiar el estado del pedido en la base de datos
-        $pedido->estado = $nuevo_estado;
-        $pedido->actualizarEstado();
+        Pedido::cambiarEstado($pedido_id, $nuevo_estado);
+        return $this->responderConJson($response, ["mensaje" => "SUCCESS: Estado del pedido actualizado con exito!"]);
+    }
 
-        $payload = json_encode(array("mensaje" => "SUCCESS: Estado del pedido actualizado con exito!"));
-        $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+    // Listar pedidos por estado
+    public function ListarPedidosPorEstado($request, $response, $args)
+    {
+        $estado = strtolower($request->getQueryParams()['estado'] ?? '');
+
+        if (!in_array($estado, self::obtenerEstadosPermitidos()) && $estado !== "") {
+            return $this->responderConJson($response, ["mensaje" => "ERROR: El estado ingresado no es valido."], 400);
+        }
+
+        $pedidos = Pedido::obtenerPorEstado($estado);
+        $payload = $pedidos ? ["pedidos" => $pedidos] : ["mensaje" => "No hay pedidos con el estado especificado."];
+        return $this->responderConJson($response, $payload);
+    }
+
+    // Listar todos los pedidos
+    public function ListarTodosLosPedidos($request, $response, $args)
+    {
+        $pedidos = Pedido::obtenerTodos();
+        $payload = $pedidos ? ["pedidos" => $pedidos] : ["mensaje" => "No hay pedidos registrados."];
+        return $this->responderConJson($response, $payload);
     }
 
     // Método para obtener los estados permitidos para los pedidos
     private static function obtenerEstadosPermitidos()
     {
         static $estados_permitidos = null;
-
         if ($estados_permitidos === null) {
             $json_data = file_get_contents('./data/estados_de_pedidos.json');
             $estados_data = json_decode($json_data, true);
             $estados_permitidos = array_map('strtolower', $estados_data['estados']);
         }
-
         return $estados_permitidos;
     }
 
-    public function ListarPedidosPorEstado($request, $response, $args)
+    // Método genérico para responder en JSON
+    private function responderConJson($response, $data, $status = 200)
     {
-        $estado = strtolower($request->getQueryParams()['estado'] ?? '');  // Obtener el estado desde el parámetro de consulta
-
-        // Definir los estados permitidos
-        $estados_permitidos = self::obtenerEstadosPermitidos();
-        $estados_permitidos[] = "";
-
-        // Validar el estado
-        if (!in_array($estado, $estados_permitidos)) {
-            $payload = json_encode(array("mensaje" => "ERROR: El estado ingresado no es valido."));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
-
-        // Obtener los pedidos con el estado especificado
-        $pedidos = Pedido::obtenerPorEstado($estado);
-        
-        if ($pedidos) {
-            $payload = json_encode(array("pedidos" => $pedidos));
-        } else {
-            $payload = json_encode(array("mensaje" => "No hay pedidos con el estado especificado."));
-        }
-
+        $payload = json_encode($data);
         $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
 
-    public function ListarTodosLosPedidos($request, $response, $args)
+    // Verificar si la mesa existe
+    private function verificarMesaExiste($mesa_id, $response)
     {
-        // Obtener todos los pedidos de la base de datos
-        $pedidos = Pedido::obtenerTodos();
-        
-        if ($pedidos) {
-            $payload = json_encode(array("pedidos" => $pedidos));
-        } else {
-            $payload = json_encode(array("mensaje" => "No hay pedidos registrados."));
+        $mesa = Mesa::obtenerPorId($mesa_id);
+        if (!$mesa) {
+            $this->responderConJson($response, ["mensaje" => "ERROR: La mesa no existe."], 400);
+            return false;
         }
+        return true;
+    }
 
-        $response->getBody()->write($payload);
-        return $response->withHeader('Content-Type', 'application/json');
+    // Verificar si el pedido existe
+    private function verificarPedidoExiste($pedido_id, $response)
+    {
+        $pedido = Pedido::obtenerPorId($pedido_id);
+        if (!$pedido) {
+            $this->responderConJson($response, ["mensaje" => "ERROR: El pedido no existe."], 404);
+            return false;
+        }
+        return true;
     }
 }
