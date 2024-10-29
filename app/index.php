@@ -21,6 +21,7 @@ require __DIR__ . '/../vendor/autoload.php';
 require_once './db/AccesoDatos.php';
 require_once './controllers/UsuarioController.php';
 require_once './controllers/EmpleadoController.php';
+require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 
@@ -57,6 +58,12 @@ $app->group('/empleados', function (RouteCollectorProxy $group) {
     $group->post('[/]', \EmpleadoController::class . ':CrearEmpleado'); // Alta de empleado
     $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados'); // Listar empleados
     $group->post('/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado'); // Cambiar estado
+});
+
+// Rutas para Productos
+$app->group('/productos', function (RouteCollectorProxy $group) {
+  $group->post('[/]', \ProductoController::class . ':CrearProducto');  // Crear un nuevo producto
+  $group->get('[/]', \ProductoController::class . ':ListarProductos'); // Listar todos los productos
 });
 
 // Rutas para Mesas
