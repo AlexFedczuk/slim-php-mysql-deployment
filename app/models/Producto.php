@@ -7,7 +7,6 @@ class Producto
     public $tipo;
     public $precio;
     public $descripcion;
-    public $fechaCreacion;
 
     // Método para crear un nuevo producto en la base de datos
     public function crearProducto()
@@ -32,4 +31,26 @@ class Producto
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
     }
+
+    // Obtener un empleado por ID
+    public static function obtenerPorId($id)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->fetchObject('Empleado');
+    }
+
+    // Obtener un empleado por Nombre
+    public static function obtenerPorNombre($nombre)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM productos WHERE nombre = :nombre");
+        $consulta->bindValue(':nombre', $nombre, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->fetchObject('Producto');
+    }
+
+    
 }

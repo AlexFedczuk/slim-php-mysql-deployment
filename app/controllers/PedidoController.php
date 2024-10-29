@@ -14,6 +14,17 @@ class PedidoController
             return $response;
         }
 
+        // Validar productos
+        $productos = json_decode($params['productos'], true);
+        foreach ($productos as $productoNombre) {
+            $producto = Producto::obtenerPorNombre($productoNombre);
+            if (!$producto) {
+                $payload = json_encode(array("mensaje" => "ERROR: El producto '$productoNombre' no esta registrado en el sistema."));
+                $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+        }
+
         // Validar el mozo responsable
         $error_mozo = Empleado::validarMozoResponsable($params['mozo_responsable']);
         if ($error_mozo) {
