@@ -52,12 +52,10 @@ class Empleado
         $mozo_responsable = Empleado::obtenerPorId($mozo_responsable_id);
         if (!$mozo_responsable) {
             return "ERROR: El mozo responsable no existe.";
-        }
-        if ($mozo_responsable->rol !== 'mozo') {
+        }else if ($mozo_responsable->rol !== 'mozo') {
             return "ERROR: El empleado relacionado no tiene el rol de mozo.";
-        }
-        if ($mozo_responsable->estado == 'suspendido') {
-            return "ERROR: El empleado relacionado está suspendido.";
+        }else if ($mozo_responsable->rol == 'mozo' && $mozo_responsable->estado == 'suspendido') {
+            return "ERROR: El empleados relacionado está suspendido.";
         }
         return null;  // Sin errores
     }

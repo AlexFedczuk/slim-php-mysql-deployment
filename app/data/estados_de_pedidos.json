@@ -1,0 +1,7 @@
+{
+    "estados": [
+        "pendiente",
+        "en preparacion",
+        "listo para servir"
+    ]
+}

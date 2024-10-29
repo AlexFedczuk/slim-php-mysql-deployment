@@ -24,6 +24,7 @@ require_once './db/AccesoDatos.php';
 require_once './controllers/UsuarioController.php';
 require_once './controllers/EmpleadoController.php';
 require_once './controllers/MesaController.php';
+require_once './controllers/PedidoController.php';
 
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -72,6 +73,15 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->post('[/]', \MesaController::class . ':CrearMesa');
   $group->get('[/]', \MesaController::class . ':ListarMesas');
   $group->post('/estado/{id}', \MesaController::class . ':CambiarEstadoMesa');
+});
+
+// Grupo de rutas para las funcionalidades de pedidos.
+$app->group('/pedidos', function (RouteCollectorProxy $group) {
+  $group->post('[/]', \PedidoController::class . ':CrearPedido');  // Crear un nuevo pedido
+  $group->get('/todos', \PedidoController::class . ':ListarTodosLosPedidos'); // Listar todos los pedidos
+  $group->get('/{id}', \PedidoController::class . ':ObtenerPedido'); // Obtener un pedido específico
+  $group->post('/estado/{id}', \PedidoController::class . ':CambiarEstadoPedido'); // Cambiar el estado de un pedido
+  $group->get('[/]', \PedidoController::class . ':ListarPedidosPorEstado'); // Listar pedidos por estado (opcional)
 });
 
 $app->run();
