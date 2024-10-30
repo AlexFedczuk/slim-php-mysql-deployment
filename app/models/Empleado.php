@@ -8,7 +8,6 @@ class Empleado
     public $clave;
     public $rol;
     public $estado;
-    public $fecha_ingreso;
 
     // Método para guardar un empleado en la base de datos
     public function guardar()
