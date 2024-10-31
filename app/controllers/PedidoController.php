@@ -9,6 +9,13 @@ class PedidoController
     {
         $params = $request->getParsedBody();
 
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (empty($params['mesa_id']) || empty($params['cliente_nombre']) || empty($params['productos']) || empty($params['mozo_responsable'])) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id de la mesa, nombre del cliente, productos o id del mozo responsable)"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
         // Verificar que la mesa exista
         if (!$this->verificarMesaExiste($params['mesa_id'], $response)) {
             return $response;
@@ -61,6 +68,14 @@ class PedidoController
     {
         $pedido_id = $args['id'];
         $params = $request->getParsedBody();
+
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (empty($params['estado'])) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (estado)"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
         $nuevo_estado = strtolower($params['estado']);
 
         // Verificar si el pedido existe

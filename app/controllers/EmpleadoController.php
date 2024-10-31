@@ -10,7 +10,7 @@ class EmpleadoController
         $params = $request->getParsedBody();
 
         // Verificar que los parámetros requeridos estén presentes y no sean nulos
-        if (empty($params['nombre']) || empty($params['clave']) || empty($params['rol'])) {
+        if (empty($params['nombre']) || empty($params['rol'])) {
             $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (nombre, clave o rol)"]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
