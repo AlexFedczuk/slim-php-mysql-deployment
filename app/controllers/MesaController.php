@@ -99,4 +99,14 @@ class MesaController
     {
         return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5);
     }
+
+    public function ObtenerInformeDeUsoDeMesas($request, $response, $args)
+    {
+        // Obtener el informe de uso de mesas
+        $informe = Mesa::contarPedidosPorMesa();
+
+        $payload = json_encode(array("informe_mesas" => $informe));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
 }

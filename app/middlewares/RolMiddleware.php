@@ -1,25 +1,28 @@
 <?php
-class RolMiddleware
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Psr7\Response;
+
+class VerificarRolMiddleware
 {
-    private $rol_requerido;
-    
-    public function __construct($rol_requerido)
+    public function __invoke(Request $request, RequestHandler $handler): Response
     {
-        $this->rol_requerido = $rol_requerido;
-    }
+        // Aquí puedes obtener el rol del usuario desde el token o sesión
+        // Este ejemplo asume que el rol se pasa como un parámetro de consulta
+        $params = $request->getQueryParams();
+        $rol = $params['rol'] ?? null; // Aquí deberías obtener el rol del token o sesión
 
-    public function __invoke($request, $handler)
-    {
-        // Obtener el usuario y su rol (en un entorno real, el usuario debe estar autenticado)
-        $usuario = $request->getAttribute('usuario');  // Se asume que el usuario y rol están en la solicitud
-
-        if ($usuario && $usuario->rol === $this->rol_requerido) {
-            return $handler->handle($request);
+        // Verifica si el rol es válido
+        if ($rol === 'socio' || $rol === 'administrador') {
+            $response = new Response();
+            $payload = json_encode(array('mensaje' => 'SUCCES: Acceso otorgado.'));
+            $response->getBody()->write($payload);
+            return $handler->handle($request); // Permitir el acceso
+        } else {
+            $response = new Response();
+            $payload = json_encode(array('mensaje' => 'Error: No tienes permisos para acceder a esta ruta, rol inválido.'));
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         }
-
-        // Si el rol no coincide, denegar acceso
-        $response = new \Slim\Psr7\Response();
-        $response->getBody()->write(json_encode(array("mensaje" => "ERROR: No tienes permiso para acceder a este recurso.")));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
     }
 }

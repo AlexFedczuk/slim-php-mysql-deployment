@@ -71,10 +71,24 @@ class Pedido {
 
     // Cambiar el estado de un pedido en la base de datos
     public static function cambiarEstado($pedido_id, $nuevo_estado) {
+        // Validar que el nuevo estado sea permitido
+        $estados_permitidos = self::obtenerEstadosPermitidos(); // Asegu de tener este método en Pedido
+        if (!in_array($nuevo_estado, $estados_permitidos)) {
+            throw new Exception("ERROR: El estado ingresado no es válido.");
+        }
+
+        // Cambiar el estado en la base de datos
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedidos SET estado = :estado WHERE id = :id");
         $consulta->bindValue(':estado', $nuevo_estado, PDO::PARAM_STR);
         $consulta->bindValue(':id', $pedido_id, PDO::PARAM_INT);
         $consulta->execute();
+    }
+
+    private static function obtenerEstadosPermitidos()
+    {
+        $json_data = file_get_contents('./data/estados_de_pedidos.json');
+        $estados_data = json_decode($json_data, true);
+        return array_map('strtolower', $estados_data['estados']);
     }
 }

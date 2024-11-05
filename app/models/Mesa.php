@@ -58,4 +58,12 @@ class Mesa
         }*/
         return null;  // Sin errores
     }
+
+    public static function contarPedidosPorMesa()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT mesa_id, COUNT(*) as cantidad_pedidos FROM pedidos GROUP BY mesa_id");
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -24,6 +24,7 @@ require_once './controllers/EmpleadoController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './middlewares/RolMiddleware.php';
 
 // Cargar variables de entorno
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -53,10 +54,13 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
 });
 
+// Definir roles permitidos para la ruta
+$rolesPermitidos = ['socio', 'administrador'];
+
 // Rutas para Empleados
 $app->group('/empleados', function (RouteCollectorProxy $group) {
     $group->post('[/]', \EmpleadoController::class . ':CrearEmpleado'); // Alta de empleado
-    $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados'); // Listar empleados
+    $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados')->add(new VerificarRolMiddleware()); // Agrega el middleware aquí; // Listar empleados
     $group->post('/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado'); // Cambiar estado
 });
 
@@ -71,6 +75,7 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
     $group->post('[/]', \MesaController::class . ':CrearMesa'); // Alta de mesa
     $group->get('[/]', \MesaController::class . ':ListarMesas'); // Listar mesas
     $group->post('/estado/{id}', \MesaController::class . ':CambiarEstadoMesa'); // Cambiar estado
+    $group->get('/informe', \MesaController::class . ':ObtenerInformeDeUsoDeMesas');
 });
 
 // Rutas para Pedidos

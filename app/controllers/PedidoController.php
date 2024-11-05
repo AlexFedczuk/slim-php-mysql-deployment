@@ -24,9 +24,8 @@ class PedidoController
         // Validar productos
         $productos = json_decode($params['productos'], true);
         foreach ($productos as $productoNombre) {
-            $producto = Producto::obtenerPorNombre($productoNombre);
-            if (!$producto) {
-                $payload = json_encode(array("mensaje" => "ERROR: El producto '$productoNombre' no esta registrado en el sistema."));
+            if (!Producto::obtenerPorNombre($productoNombre)) {
+                $payload = json_encode(array("mensaje" => "ERROR: El producto '$productoNombre' no esta registrado en la DB."));
                 $response->getBody()->write($payload);
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
@@ -88,8 +87,16 @@ class PedidoController
             return $this->responderConJson($response, ["mensaje" => "ERROR: El estado ingresado no es valido."], 400);
         }
 
-        Pedido::cambiarEstado($pedido_id, $nuevo_estado);
-        return $this->responderConJson($response, ["mensaje" => "SUCCESS: Estado del pedido actualizado con exito!"]);
+        try {
+            Pedido::cambiarEstado($pedido_id, $nuevo_estado);
+            $payload = json_encode(array("mensaje" => "SUCCESS: Estado del pedido actualizado con exito!"));
+        } catch (Exception $e) {
+            $payload = json_encode(array("mensaje" => $e->getMessage()));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     // Listar pedidos por estado
