@@ -85,4 +85,17 @@ class Empleado
         }
         return null;  // Sin errores
     }
+
+    public static function borrarEmpleado($id)
+    {
+        try {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM empleados WHERE id = :id");
+            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+            $consulta->execute();
+        } catch (PDOException $e) {
+            // Manejar el error de manera adecuada, tal vez lanzando una excepción personalizada
+            throw new Exception("Error al borrar el empleado: " . $e->getMessage());
+        }
+    }
 }

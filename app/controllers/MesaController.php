@@ -43,11 +43,59 @@ class MesaController
     // Listar todas las mesas
     public function ListarMesas($request, $response, $args)
     {
-        $lista = Mesa::obtenerTodas();
-        $payload = json_encode(array("listaMesas" => $lista));
+        $mesas = Mesa::obtenerTodas();
 
+        if(!$mesas) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay mesas para listar."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        $payload = json_encode(array("mesas" => $mesas));   
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    // Listar UN empleado
+    public function ListarUnaMesa($request, $response, $args)
+    {
+        $params = $request->getParsedBody();
+        $id = $params['id'] ?? null;
+
+        if (is_null($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $mesa = Mesa::obtenerPorId($id);
+
+        if (!$mesa) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay una mesa con el ID: " . $id . "."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        $payload = json_encode($mesa);
+        return $response->withHeader('Content-Type', 'application/json')->write($payload);
+    }
+
+    public function BorrarMesa($request, $response, $args)
+    {
+        $id = $args['id'] ?? null;
+
+        if (is_null($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $mesa = Mesa::obtenerPorId($id);
+        if (!$mesa) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay una Mesa con el ID: " . $id . "."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        Mesa::borrarMesa($id);
+
+        $payload = json_encode(["mensaje" => "SUCCESS: Mesa con ID: " . $id . " ha sido eliminada."]);
+        return $response->withHeader('Content-Type', 'application/json')->write($payload);
     }
 
     // Cambiar el estado de una mesa

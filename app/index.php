@@ -59,32 +59,39 @@ $rolesPermitidos = ['socio', 'administrador'];
 
 // Rutas para Empleados
 $app->group('/empleados', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \EmpleadoController::class . ':CrearEmpleado'); // Alta de empleado
-    $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados')->add(new VerificarRolMiddleware()); // Agrega el middleware aquí; // Listar empleados
-    $group->post('/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado'); // Cambiar estado
+    $group->post('[/]', \EmpleadoController::class . ':CrearEmpleado')->add(new RolMiddleware(['administrador']));// Solo administradores: Alta de empleado
+    $group->get('[/]', \EmpleadoController::class . ':ListarEmpleados');// Listar empleados
+    $group->get('/{id}', \EmpleadoController::class . ':ListarUnEmpleado');
+    $group->post('/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado')->add(new RolMiddleware(['administrador']));; // Cambiar estado
+    $group->delete('/eliminar/{id}', \EmpleadoController::class . ':BorrarEmpleado')->add(new RolMiddleware(['administrador']));;
 });
 
 // Rutas para Productos
 $app->group('/productos', function (RouteCollectorProxy $group) {
-  $group->post('[/]', \ProductoController::class . ':CrearProducto');  // Crear un nuevo producto
-  $group->get('[/]', \ProductoController::class . ':ListarProductos'); // Listar todos los productos
+  $group->post('[/]', \ProductoController::class . ':CrearProducto')->add(new RolMiddleware(['administrador']));;  // Crear un nuevo producto
+  $group->get('[/]', \ProductoController::class . ':ListarProductos')->add(new RolMiddleware(['administrador', 'socio','mozos']));; // Listar todos los productos
+  $group->get('/{id}', \ProductoController::class . ':ListarUnProducto')->add(new RolMiddleware(['administrador', 'socio','mozos']));; // Listar todos los productos 
+  $group->delete('/{id}', \ProductoController::class . ':BorrarProducto')->add(new RolMiddleware(['administrador']));; // Listar todos los productos 
 });
 
 // Rutas para Mesas
 $app->group('/mesas', function (RouteCollectorProxy $group) {
     $group->post('[/]', \MesaController::class . ':CrearMesa'); // Alta de mesa
     $group->get('[/]', \MesaController::class . ':ListarMesas'); // Listar mesas
+    $group->get('/{id}', \MesaController::class . ':ListarUnaMesa');
     $group->post('/estado/{id}', \MesaController::class . ':CambiarEstadoMesa'); // Cambiar estado
     $group->get('/informe', \MesaController::class . ':ObtenerInformeDeUsoDeMesas');
+    $group->delete('/{id}', \MesaController::class . ':BorrarMesa')->add(new RolMiddleware(['administrador']));
 });
 
 // Rutas para Pedidos
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
-    $group->post('[/]', \PedidoController::class . ':CrearPedido'); // Crear un nuevo pedido
-    $group->get('/todos', \PedidoController::class . ':ListarTodosLosPedidos'); // Listar todos los pedidos
+    $group->post('[/]', \PedidoController::class . ':CrearPedido')->add(new RolMiddleware(['administrador','mozo'])); // Crear un nuevo pedido
+    $group->get('[/]', \PedidoController::class . ':ListarPedidos'); // Listar todos los pedidos
     $group->get('/{id}', \PedidoController::class . ':ObtenerPedido'); // Obtener un pedido específico
     $group->post('/estado/{id}', \PedidoController::class . ':CambiarEstadoPedido'); // Cambiar el estado de un pedido
     $group->get('[/]', \PedidoController::class . ':ListarPedidosPorEstado'); // Listar pedidos por estado
+    $group->delete('/{id}', \PedidoController::class . ':BorrarPedido')->add(new RolMiddleware(['administrador']));
 });
 
 // Ejecutar la aplicación

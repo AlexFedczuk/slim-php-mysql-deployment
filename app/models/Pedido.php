@@ -85,6 +85,14 @@ class Pedido {
         $consulta->execute();
     }
 
+    public static function borrarPedido($id)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM pedidos WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
+
     private static function obtenerEstadosPermitidos()
     {
         $json_data = file_get_contents('./data/estados_de_pedidos.json');

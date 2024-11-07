@@ -114,11 +114,32 @@ class PedidoController
     }
 
     // Listar todos los pedidos
-    public function ListarTodosLosPedidos($request, $response, $args)
+    public function ListarPedidos($request, $response, $args)
     {
         $pedidos = Pedido::obtenerTodos();
         $payload = $pedidos ? ["pedidos" => $pedidos] : ["mensaje" => "No hay pedidos registrados."];
         return $this->responderConJson($response, $payload);
+    }
+
+    public function BorrarPedido($request, $response, $args)
+    {
+        $id = $args['id'] ?? null;
+
+        if (is_null($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $pedido = Pedido::obtenerPorId($id);
+        if (!$pedido) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay un Pedido con el ID: " . $id . "."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        Pedido::borrarPedido($id);
+
+        $payload = json_encode(["mensaje" => "SUCCESS: Pedido con ID: " . $id . " ha sido eliminado."]);
+        return $response->withHeader('Content-Type', 'application/json')->write($payload);
     }
 
     // Método para obtener los estados permitidos para los pedidos

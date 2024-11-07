@@ -52,4 +52,46 @@ class ProductoController
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function ListarUnProducto($request, $response, $args)
+    {
+        $params = $request->getParsedBody();
+        $id = $params['id'] ?? null;
+
+        if (is_null($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $producto = Producto::obtenerPorId($id);
+
+        if (!$producto) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay un Producto con el ID: " . $id . "."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        $payload = json_encode($producto);
+        return $response->withHeader('Content-Type', 'application/json')->write($payload);
+    }
+
+    public function BorrarProducto($request, $response, $args)
+    {
+        $id = $args['id'] ?? null;
+
+        if (is_null($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400)->write($payload);
+        }
+
+        $producto = Producto::obtenerPorId($id);
+        if (!$producto) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay un Producto con el ID: " . $id . "."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+
+        Producto::borrarProducto($id);
+
+        $payload = json_encode(["mensaje" => "SUCCESS: Producto con ID: " . $id . " ha sido eliminado."]);
+        return $response->withHeader('Content-Type', 'application/json')->write($payload);
+    }
 }

@@ -39,9 +39,39 @@ class EmpleadoController
     // Listar todos los empleados
     public function ListarEmpleados($request, $response, $args)
     {
-        $empleados = Empleado::obtenerTodos();
-        $payload = json_encode(["empleados" => $empleados]);
+        $empleados = Empleado::obtenerTodos();        
 
+        if (!$empleados) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay empleados para listar."]);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404)->write($payload);
+        }
+        
+        $payload = json_encode(array("empleados" => $empleados));   
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    // Listar UN empleado
+    public function ListarUnEmpleado($request, $response, $args)
+    {
+        $id = $args['id'] ?? null;
+
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (empty($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Obtener el empleado por ID
+        $empleado = Empleado::obtenerPorId($id);
+        if (!$empleado) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay un empleado con el ID: " . $id]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $payload = json_encode($empleado);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -81,4 +111,32 @@ class EmpleadoController
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function BorrarEmpleado($request, $response, $args)
+    {
+        $id = $args['id'] ?? null;  // Obtener el ID del empleado desde los parámetros de la URL
+
+        // Verificar que los parámetros requeridos estén presentes y no sean nulos
+        if (empty($id)) {
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (id)"]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Verificar que el empleado existe
+        $empleado = Empleado::obtenerPorId($id);
+        if (!$empleado) {
+            $payload = json_encode(array("mensaje" => "ERROR: No hay un empleado con el ID: $id."));
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        // Lógica para eliminar el empleado
+        Empleado::borrarEmpleado($id);
+
+        $payload = json_encode(array("mensaje" => "SUCCESS: Empleado con ID $id ha sido eliminado."));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    }
+
 }

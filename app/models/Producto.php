@@ -52,5 +52,13 @@ class Producto
         return $consulta->fetchObject('Producto');
     }
 
+    public static function borrarProducto($id)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM productos WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
+
     
 }
