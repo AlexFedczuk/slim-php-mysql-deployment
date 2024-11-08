@@ -1,41 +1,37 @@
 <?php
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
 
 class RolMiddleware
 {
-    private $rolPermitido;
+    private $rolesPermitidos;
 
-    public function __construct(array $rolPermitido)
+    public function __construct(array $rolesPermitidos)
     {
-        $this->rolPermitido = $rolPermitido;
+        $this->rolesPermitidos = $rolesPermitidos;
     }
 
-    public function __invoke(Request $request, RequestHandler $handler): Response
+    public function __invoke(Request $request, RequestHandler $handler): ResponseInterface
     {
-        $params = $request->getQueryParams();
-        $rol = $params['rol'] ?? null; // Cambiar esto para obtener el rol del token o sesión
+        $usuario = $request->getAttribute('usuario');
 
-        // Verificar si el rol está presente
-        if (is_null($rol)) {
+        // Verificar que el usuario tenga un rol
+        if (!isset($usuario->rol)) {
             $response = new Response();
-            $payload = json_encode(array('mensaje' => 'ERROR: El rol es necesario para acceder a esta ruta.'));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            $response->getBody()->write(json_encode(["mensaje" => "Error: Rol no proporcionado."]));
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
-        // Verificar si el rol coincide con el rol permitido
-        if (in_array($rol, $this->rolPermitido)) {
+        // Verificar si el rol del usuario está en los roles permitidos
+        if (!in_array($usuario->rol, $this->rolesPermitidos)) {
             $response = new Response();
-            $payload = json_encode(array('mensaje' => 'Acceso otorgado...'));
-            $response->getBody()->write($payload);
-            return $handler->handle($request);
-        } else {
-            $response = new Response();
-            $payload = json_encode(array('mensaje' => 'Acceso denegado: Se requiere rol de ' . $this->rolPermitido . '.'));
-            $response->getBody()->write($payload);
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            $response->getBody()->write(json_encode(["mensaje" => "Error: Acceso denegado."]));
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
+
+        // Continuar con el siguiente middleware o controlador
+        return $handler->handle($request);
     }
 }

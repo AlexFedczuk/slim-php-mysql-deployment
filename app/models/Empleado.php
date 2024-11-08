@@ -5,7 +5,6 @@ class Empleado
 {
     public $id;
     public $nombre;
-    public $clave;
     public $rol;
     public $estado;
 
@@ -13,13 +12,9 @@ class Empleado
     public function guardar()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO empleados (nombre, clave, rol, estado) VALUES (:nombre, :clave, :rol, :estado)");
-        
-        // Hash de la clave antes de guardarla
-        $claveHash = password_hash($this->clave, PASSWORD_DEFAULT);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO empleados (nombre, rol, estado) VALUES (:nombre, :rol, :estado)");
         
         $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
-        $consulta->bindValue(':clave', $claveHash, PDO::PARAM_STR);
         $consulta->bindValue(':rol', $this->rol, PDO::PARAM_STR);
         $consulta->bindValue(':estado', 'activo', PDO::PARAM_STR); // Estado inicial por defecto
         $consulta->execute();

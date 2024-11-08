@@ -11,7 +11,7 @@ class EmpleadoController
 
         // Verificar que los parámetros requeridos estén presentes y no sean nulos
         if (empty($params['nombre']) || empty($params['rol'])) {
-            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (nombre, clave o rol)"]);
+            $payload = json_encode(["mensaje" => "ERROR: Faltan datos necesarios (nombre o rol)"]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
@@ -26,7 +26,6 @@ class EmpleadoController
         // Crear el empleado
         $empleado = new Empleado();
         $empleado->nombre = ucwords(strtolower($params['nombre']));
-        $empleado->clave = $params['clave'];
         $empleado->rol = strtolower($params['rol']);
         
         $empleado->guardar(); // Mueve la lógica de guardado al modelo
