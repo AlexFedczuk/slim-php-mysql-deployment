@@ -137,5 +137,12 @@ $app->get('/', function (Request $request, Response $response) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+// Middleware para manejar rutas no definidas
+$app->map(['GET', 'POST', 'PUT', 'DELETE'], '/{routes:.+}', function ($request, $response, $args) {
+    $payload = json_encode(["mensaje" => "ERROR: Ruta no definida."]);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+});
+
 // Ejecutar la aplicación
 $app->run();
