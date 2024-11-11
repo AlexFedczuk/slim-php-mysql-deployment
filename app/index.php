@@ -55,18 +55,16 @@ $app->post('/login', function (Request $request, Response $response, array $args
     return $controller->login($request, $response, $args);
 });
 
-// Rutas para Usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('[/]', \UsuarioController::class . ':TraerTodos');
     $group->get('/{usuario}', \UsuarioController::class . ':TraerUno');
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
 });
 
-// Rutas para Empleados
 $app->group('/empleados', function (RouteCollectorProxy $group) use ($secretKey) {
     // Ruta para crear un empleado (solo administradores)
     $group->post('/crear', \EmpleadoController::class . ':CrearEmpleado')
-          ->add(new AuthMiddleware($secretKey)); // Middleware que permite solo a administradores
+          ->add(new RolMiddleware(['administrador'], $secretKey));
 
     // Ruta para listar todos los empleados (sin restricciones)
     $group->get('/listar', \EmpleadoController::class . ':ListarEmpleados');
@@ -75,40 +73,59 @@ $app->group('/empleados', function (RouteCollectorProxy $group) use ($secretKey)
     $group->get('/listar/{id}', \EmpleadoController::class . ':ListarUnEmpleado');
 
     // Ruta para cambiar el estado de un empleado (solo administradores)
-    $group->post('/modificar/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado')
-          ->add(new RolMiddleware(['administrador']));
+    $group->post('/modificar/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado');
 
     // Ruta para eliminar un empleado (autenticación requerida)
     $group->delete('/borrar/{id}', \EmpleadoController::class . ':BorrarEmpleado')
-          ->add(new AuthMiddleware($secretKey)); // Middleware de autenticación para validar el token
+          ->add(new RolMiddleware(['administrador'], $secretKey)); // Middleware de autenticación para validar el token
 });
 
 // Rutas para Productos
-$app->group('/productos', function (RouteCollectorProxy $group) {
-  $group->post('/crear', \ProductoController::class . ':CrearProducto')->add(new RolMiddleware(['administrador']));;  // Crear un nuevo producto
-  $group->get('/listar', \ProductoController::class . ':ListarProductos')->add(new RolMiddleware(['administrador', 'socio','mozos']));; // Listar todos los productos
-  $group->get('/listar/{id}', \ProductoController::class . ':ListarUnProducto')->add(new RolMiddleware(['administrador', 'socio','mozos']));; // Listar todos los productos 
-  $group->delete('/borrar/{id}', \ProductoController::class . ':BorrarProducto')->add(new RolMiddleware(['administrador']));; // Listar todos los productos 
+$app->group('/productos', function (RouteCollectorProxy $group) use ($secretKey) {
+  $group->post('/crear', \ProductoController::class . ':CrearProducto')
+        ->add(new RolMiddleware(['administrador'], $secretKey));
+
+  $group->get('/listar', \ProductoController::class . ':ListarProductos');
+
+  $group->get('/listar/{id}', \ProductoController::class . ':ListarUnProducto');
+
+  $group->delete('/borrar/{id}', \ProductoController::class . ':BorrarProducto')
+        ->add(new RolMiddleware(['administrador'], $secretKey));
 });
 
 // Rutas para Mesas
-$app->group('/mesas', function (RouteCollectorProxy $group) {
-    $group->post('/crear', \MesaController::class . ':CrearMesa'); // Alta de mesa
+$app->group('/mesas', function (RouteCollectorProxy $group) use ($secretKey) {
+    $group->post('/crear', \MesaController::class . ':CrearMesa')
+          ->add(new RolMiddleware(['mozo', 'administrador'], $secretKey)); // Alta de mesa
+
     $group->get('/listar', \MesaController::class . ':ListarMesas'); // Listar mesas
+
     $group->get('/informe', \MesaController::class . ':ObtenerInformeDeUsoDeMesas');
+
     $group->get('/listar/{id}', \MesaController::class . ':ListarUnaMesa');
-    $group->post('/modificar/estado/{id}', \MesaController::class . ':CambiarEstadoMesa'); // Cambiar estado    
-    $group->delete('/borrar/{id}', \MesaController::class . ':BorrarMesa')->add(new RolMiddleware(['administrador']));
+
+    $group->post('/modificar/estado/{id}', \MesaController::class . ':CambiarEstadoMesa')
+          ->add(new RolMiddleware(['socio', 'administrador'], $secretKey));
+
+    $group->delete('/borrar/{id}', \MesaController::class . ':BorrarMesa')
+          ->add(new RolMiddleware(['administrador'], $secretKey));
 });
 
 // Rutas para Pedidos
-$app->group('/pedidos', function (RouteCollectorProxy $group) {
-    $group->post('/crear', \PedidoController::class . ':CrearPedido')->add(new RolMiddleware(['administrador','mozo'])); // Crear un nuevo pedido
+$app->group('/pedidos', function (RouteCollectorProxy $group) use ($secretKey) {
+    $group->post('/crear', \PedidoController::class . ':CrearPedido')
+          ->add(new RolMiddleware(['mozo', 'administrador'], $secretKey));
+
     $group->get('/listar', \PedidoController::class . ':ListarPedidos'); // Listar todos los pedidos
+
     $group->get('/obtener/{id}', \PedidoController::class . ':ObtenerPedido'); // Obtener un pedido específico
+
     $group->post('/modificar/estado/{id}', \PedidoController::class . ':CambiarEstadoPedido'); // Cambiar el estado de un pedido
+
     $group->get('/listar/estado', \PedidoController::class . ':ListarPedidosPorEstado'); // Listar pedidos por estado
-    $group->delete('/borrar/{id}', \PedidoController::class . ':BorrarPedido')->add(new RolMiddleware(['administrador']));
+
+    $group->delete('/borrar/{id}', \PedidoController::class . ':BorrarPedido')
+          ->add(new RolMiddleware(['administrador'], $secretKey));
 });
 
 // Ruta de bienvenida general
