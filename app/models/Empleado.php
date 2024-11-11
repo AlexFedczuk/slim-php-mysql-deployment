@@ -22,6 +22,16 @@ class Empleado
         return $objAccesoDatos->obtenerUltimoId();
     }
 
+    public static function crearEmpleado($empleado)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO empleados (nombre, rol, estado) VALUES (:nombre, :rol, :estado)");
+        $consulta->bindValue(':nombre', $empleado['nombre'], PDO::PARAM_STR);
+        $consulta->bindValue(':rol', $empleado['rol'], PDO::PARAM_STR);
+        $consulta->bindValue(':estado', $empleado['estado'], PDO::PARAM_STR);
+        $consulta->execute();
+    }
+
     // Método para cambiar el estado del empleado
     public function cambiarEstado($nuevoEstado)
     {
@@ -92,5 +102,25 @@ class Empleado
             // Manejar el error de manera adecuada, tal vez lanzando una excepción personalizada
             throw new Exception("Error al borrar el empleado: " . $e->getMessage());
         }
+    }
+
+    public static function validarEmpleado($empleado)
+    {
+        // Validar nombre
+        if (empty($empleado['nombre']) || !is_string($empleado['nombre'])) {
+            return false;
+        }
+
+        // Validar rol
+        if (empty($empleado['rol']) || !in_array($empleado['rol'], ['mozo', 'cocinero', 'bartender', , 'cervezero', 'socio'])) {
+            return false;
+        }
+
+        // Validar estado
+        if (empty($empleado['estado']) || !in_array($empleado['estado'], ['activo', 'suspendido'])) {
+            return false;
+        }
+
+        return true;
     }
 }

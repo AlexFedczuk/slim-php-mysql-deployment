@@ -138,4 +138,62 @@ class EmpleadoController
         return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
 
+    public function CargarEmpleadosDesdeCSV($request, $response, $args)
+    {
+        // Verificar que el archivo se haya subido
+        if (!$request->getUploadedFiles()) {
+            $payload = json_encode(['mensaje' => 'ERROR: No se ha enviado ningún archivo.']);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        $uploadedFiles = $request->getUploadedFiles();
+        $csvFile = $uploadedFiles['csv_file'] ?? null;
+
+        if ($csvFile && $csvFile->getError() === UPLOAD_ERR_OK) {
+            // Leer el contenido del archivo CSV
+            $csvContent = file_get_contents($csvFile->getStream()->getMetadata('uri'));
+            $lines = explode("\n", $csvContent); // Dividir en líneas
+
+            $header = str_getcsv(array_shift($lines)); // Obtener la primera línea (encabezado)
+
+            // Variables para contar la cantidad de empleados cargados y errores
+            $empleadosCargados = 0;
+            $errores = [];
+
+            // Recorrer las líneas del CSV y agregar a la base de datos
+            foreach ($lines as $line) {
+                if (empty($line)) continue; // Ignorar líneas vacías
+
+                $data = str_getcsv($line);
+                $empleado = [
+                    'nombre' => $data[0] ?? null,
+                    'rol' => $data[1] ?? null,
+                    'estado' => $data[2] ?? null
+                ];
+
+                // Validar que los datos sean correctos
+                if (Empleado::validarEmpleado($empleado)) {
+                    // Si es válido, guardar el empleado en la base de datos
+                    Empleado::crearEmpleado($empleado);
+                    $empleadosCargados++;
+                } else {
+                    $errores[] = "Empleado con datos inválidos: " . implode(",", $empleado);
+                }
+            }
+
+            // Responder con los resultados
+            $mensaje = [
+                'empleados_cargados' => $empleadosCargados,
+                'errores' => $errores
+            ];
+            $payload = json_encode($mensaje);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        } else {
+            $payload = json_encode(['mensaje' => 'Error al cargar el archivo CSV.']);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+    }
 }

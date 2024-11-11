@@ -14,7 +14,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
-use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -64,7 +63,10 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 $app->group('/empleados', function (RouteCollectorProxy $group) use ($secretKey) {
     // Ruta para crear un empleado (solo administradores)
     $group->post('/crear', \EmpleadoController::class . ':CrearEmpleado')
-          ->add(new RolMiddleware(['administrador'], $secretKey));
+    ->add(new RolMiddleware(['administrador'], $secretKey));
+
+    $group->post('/cargar_csv', \EmpleadoController::class . ':CargarEmpleadosDesdeCSV');
+    //->add(new RolMiddleware(['administrador'], $secretKey));
 
     // Ruta para listar todos los empleados (sin restricciones)
     $group->get('/listar', \EmpleadoController::class . ':ListarEmpleados');
@@ -72,12 +74,12 @@ $app->group('/empleados', function (RouteCollectorProxy $group) use ($secretKey)
     // Ruta para listar un empleado por ID (sin restricciones)
     $group->get('/listar/{id}', \EmpleadoController::class . ':ListarUnEmpleado');
 
-    // Ruta para cambiar el estado de un empleado (solo administradores)
+    // Ruta para cambiar el estado de un empleado.
     $group->post('/modificar/estado/{id}', \EmpleadoController::class . ':CambiarEstadoEmpleado');
 
-    // Ruta para eliminar un empleado (autenticación requerida)
+    // Ruta para eliminar un empleado.
     $group->delete('/borrar/{id}', \EmpleadoController::class . ':BorrarEmpleado')
-          ->add(new RolMiddleware(['administrador'], $secretKey)); // Middleware de autenticación para validar el token
+    ->add(new RolMiddleware(['administrador'], $secretKey)); // Middleware de autenticación para validar el token
 });
 
 // Rutas para Productos

@@ -18,9 +18,9 @@ class LoginController
         $username = $params['username'] ?? '';
         $password = $params['password'] ?? '';
 
-        // Verificar las credenciales en la base de datos.
-        // Ejemplo básico sin base de datos.
-        if ($username === 'admin' && $password === '12345') {
+        $result = LoginController::verificarCredenciales($username, $password);
+
+        if ($result) {
             // Si las credenciales son válidas, genera el token
             $now = time();
             $payload = [
@@ -28,7 +28,7 @@ class LoginController
                 "exp" => $now + (60 * 60), // El token expira en 1 hora
                 "data" => [
                     "username" => $username,
-                    "rol" => "administrador" // Aquí defines el rol, en este caso 'administrador'
+                    "rol" => $result['rol']
                 ]
             ];
 
@@ -40,6 +40,35 @@ class LoginController
             // Si las credenciales no son válidas, retorna un error
             $response->getBody()->write(json_encode(["mensaje" => "ERROR: Credenciales inválidas."]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
+        }
+    }
+
+    public static function verificarCredenciales($usuario, $password)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT usuario, contraseña, rol FROM usuarios WHERE usuario = :usuario");
+        $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
+        $consulta->execute();
+
+        // Resultado de la consulta
+        $usuarioBD = $consulta->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuarioBD) {
+            // Verificar la contraseña
+            if ($password == $usuarioBD['contraseña']) {
+                // Si correcta, devolver los datos del usuario
+                return [
+                    'usuario' => $usuarioBD['usuario'],
+                    'rol' => $usuarioBD['rol']
+                ];
+            } else {
+                // Contraseña incorrecta
+                return false;
+            }
+        } else {
+            // El usuario no existe
+            return false;
         }
     }
 }
