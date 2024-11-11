@@ -112,7 +112,7 @@ class Empleado
         }
 
         // Validar rol
-        if (empty($empleado['rol']) || !in_array($empleado['rol'], ['mozo', 'cocinero', 'bartender', , 'cervezero', 'socio'])) {
+        if (empty($empleado['rol']) || !in_array($empleado['rol'], ['mozo', 'cocinero', 'bartender', 'cervezero', 'socio'])) {
             return false;
         }
 

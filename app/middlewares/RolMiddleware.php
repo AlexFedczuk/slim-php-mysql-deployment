@@ -33,16 +33,12 @@ class RolMiddleware
             //$decoded = JWT::decode($token, $this->claveSecreta, ['HS256']);
             $decoded = JWT::decode($token, new Key($this->claveSecreta, 'HS256'));
 
-            // Verificar que el rol exista en el token decodificado
-            if (!isset($decoded->rol)) {
-                throw new Exception("El rol no está presente en el token.");
-            }
 
             // Extraemos el rol desde el token decodificado
-            $role = $decoded->rol; // Aquí es donde tienes el rol del usuario, ajusta si es diferente en tu token
+            $rol = $decoded->data->rol; // Aquí es donde tienes el rol del usuario, ajusta si es diferente en tu token
 
             // Verificamos si el rol del usuario está en los roles permitidos
-            if (!in_array($role, $this->rolesPermitidos)) {
+            if (!in_array($rol, $this->rolesPermitidos)) {
                 return $this->forbiddenResponse("ADVERTENCIA: No tienes permisos para acceder a esta ruta", 403);
             }
 
