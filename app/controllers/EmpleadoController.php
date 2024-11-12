@@ -196,4 +196,42 @@ class EmpleadoController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
     }
+
+    public function DescargarEmpleadosCSV($request, $response, $args)
+    {
+        $empleados = Empleado::obtenerTodos();
+
+        if (!$empleados) {
+            $payload = json_encode(["mensaje" => "ERROR: No hay empleados para descargar."]);
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $filename = 'empleados_' . date('Y-m-d_H-i-s') . '.csv';
+        $file = fopen('php://temp', 'w');
+
+        // Encabezado del archivo CSV
+        $header = ['ID', 'Nombre', 'Rol', 'Estado'];
+        fputcsv($file, $header);
+
+        // Recorrer los empleados y escribe cada uno en el CSV
+        foreach ($empleados as $empleado) {
+            fputcsv($file, [$empleado->id, $empleado->nombre, $empleado->rol, $empleado->estado]);
+        }
+
+        // Mover el puntero del archivo al inicio
+        rewind($file);
+
+        // Setear las cabeceras para la descarga del archivo CSV
+        $response = $response->withHeader('Content-Type', 'text/csv')
+        ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
+
+        // Escribir el contenido del archivo CSV en el cuerpo de la respuesta
+        $response->getBody()->write(stream_get_contents($file));
+
+        fclose($file);
+
+        return $response;
+    }
+
 }

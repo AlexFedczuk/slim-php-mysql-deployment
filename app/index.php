@@ -68,6 +68,8 @@ $app->group('/empleados', function (RouteCollectorProxy $group) use ($secretKey)
     $group->post('/cargar_csv', \EmpleadoController::class . ':CargarEmpleadosDesdeCSV');
     //->add(new RolMiddleware(['administrador'], $secretKey));
 
+    $group->get('/descargar_csv', \EmpleadoController::class . ':DescargarEmpleadosCSV');
+
     // Ruta para listar todos los empleados (sin restricciones)
     $group->get('/listar', \EmpleadoController::class . ':ListarEmpleados');
 
